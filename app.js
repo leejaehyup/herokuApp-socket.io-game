@@ -1,8 +1,10 @@
 //var mongojs = require("mongojs");
 var db = null;//mongojs('localhost:27017/myGame', ['account','progress']);
 
+
 require('./Entity');
 require('./client/Inventory');
+
 
 var express = require('express');
 var app = express();
@@ -51,10 +53,12 @@ io.sockets.on('connection', function(socket){
 	socket.id = Math.random();
 	SOCKET_LIST[socket.id] = socket;
 	
+
 	socket.on('signIn',function(data){ //{username,password}
 		isValidPassword(data,function(res){
 			if(res){
 				Player.onConnect(socket,data.username);
+
 				socket.emit('signInResponse',{success:true});
 			} else {
 				socket.emit('signInResponse',{success:false});			
@@ -78,7 +82,15 @@ io.sockets.on('connection', function(socket){
 		delete SOCKET_LIST[socket.id];
 		Player.onDisconnect(socket);
 	});
-	
+
+	socket.on('sendMsgToServer',function(data){
+		var playerName = ("" + socket.id).slice(2,7);
+		for(var i in SOCKET_LIST){
+			SOCKET_LIST[i].emit('addToChat',playerName + ': ' + data);
+		}
+	});
+
+
 	socket.on('evalServer',function(data){
 		if(!DEBUG)
 			return;
@@ -89,6 +101,7 @@ io.sockets.on('connection', function(socket){
 	
 	
 });
+
 
 
 setInterval(function(){
@@ -119,6 +132,10 @@ var startProfiling = function(duration){
 }
 startProfiling(10000);
 */
+
+
+
+
 
 
 
