@@ -3,8 +3,8 @@ var removePack = { player: [], bullet: [], gun: [] };
 
 Entity = function(param) {
   var self = {
-    x: 700,
-    y: 400,
+    x: 900, //7
+    y: 500, ///4
     spdX: 0,
     spdY: 0,
     id: "",
@@ -72,8 +72,10 @@ Player = function(param) {
   self.score = 0;
   self.gunTimer = 0;
   //self.shoot = 0;
-  self.userItemGun = false;
-  self.gunItem = null;
+  self.usageCountGun = 0;
+  self.count = 0;
+  self.userItemGun = false; //using of item gun
+  self.gunItem = null; //gun item name
   self.inventory = new Inventory(param.socket, true);
 
   var super_update = self.update;
@@ -85,14 +87,21 @@ Player = function(param) {
     if (self.pressingAttack) {
       //gunItem use
       if (self.useItemGun) {
-        //use Item -> 0.1%
+        if (self.usageCountGun <= 0) {
+          self.gunItem = null;
+          self.useItemGun = false;
+          self.usageCountGun = 0;
+        }
         if (self.gunItem === gunList[0]) {
+          //use Item -> 0.1%
           //machinegun
+          self.usageCountGun--;
           self.shootBullet(self.mouseAngle);
           if (Math.random() < 0.005) Gun({ map: self.map });
         } else if (self.gunItem === gunList[1]) {
           //shotgun
           if (self.gunTimer >= 5) {
+            self.usageCountGun--;
             for (
               var i = self.mouseAngle - 10;
               i < self.mouseAngle + 10;
@@ -134,7 +143,8 @@ Player = function(param) {
         self.spdX = 0;
       } else self.spdX = self.maxSpd;
     } else if (self.pressingLeft) {
-      if (self.x < 0) {
+      if (self.x < 500) {
+        //500
         self.spdX = 0;
       } else {
         self.spdX = -self.maxSpd;
@@ -142,7 +152,8 @@ Player = function(param) {
     } else self.spdX = 0;
 
     if (self.pressingUp) {
-      if (self.y < 0) {
+      if (self.y < 250) {
+        //250
         self.spdY = 0;
       } else {
         self.spdY = -self.maxSpd;
@@ -165,7 +176,8 @@ Player = function(param) {
       hp: self.hp,
       hpMax: self.hpMax,
       score: self.score,
-      map: self.map
+      map: self.map,
+      shot: self.usageCountGun
     };
   };
   self.getUpdatePack = function() {
@@ -175,7 +187,8 @@ Player = function(param) {
       y: self.y,
       hp: self.hp,
       score: self.score,
-      map: self.map
+      map: self.map,
+      shot: self.usageCountGun
     };
   };
 
@@ -207,12 +220,14 @@ Player.onConnect = function(socket, username) {
     if (player.map === "field") player.map = "forest";
     else player.map = "field";
   });
-
+  /*
+지워야됨
   socket.on("sendMsgToServer", function(data) {
     for (var i in SOCKET_LIST) {
       SOCKET_LIST[i].emit("addToChat", player.username + ": " + data);
     }
   });
+  */
   socket.on("sendPmToServer", function(data) {
     //data:{username,message}
     var recipientSocket = null;
@@ -342,8 +357,8 @@ Bullet.getAllInitPack = function() {
 Gun = function(param) {
   var self = Entity(param);
   self.id = Math.random();
-  self.x = Math.random() * 1400;
-  self.y = Math.random() * 700;
+  self.x = Math.random() * 900 + 500;
+  self.y = Math.random() * 450 + 250;
   self.gunNumber = Math.floor(Math.random() * 2);
   self.gun = gunList[self.gunNumber];
   self.update = function() {
@@ -352,6 +367,7 @@ Gun = function(param) {
       if (self.map === p.map && self.getDistance(p) < 32) {
         p.gunItem = self.gun;
         p.useItemGun = true;
+        p.usageCountGun += 20;
         self.toRemove = true;
       }
     }
